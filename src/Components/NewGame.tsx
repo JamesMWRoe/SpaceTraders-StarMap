@@ -1,11 +1,19 @@
 import { useState } from 'react';
+import { useTokenContext } from '../Context/TokenContext';
+import { Agent } from '../Types/Agent';
 
-export default function NewGame()
+type NewGameProps =
+{
+  setAgent: React.Dispatch<React.SetStateAction<Agent | undefined>>;
+}
+
+export default function NewGame({setAgent}: NewGameProps)
 {
   const [ symbol, setSymbol ] = useState("");
   const [ faction, setFaction ] = useState("COSMIC");
-
   const [ resp, setResp ] = useState("");
+
+  const { setAgentToken } = useTokenContext();
 
   return(  
     <>
@@ -44,6 +52,8 @@ export default function NewGame()
     if (resp.ok)
     {
       console.log("response OK!")
+      setAgentToken(json.data.token);
+      setAgent(json.data.agent);
     }
 
     setResp(JSON.stringify(json, null, 2));
