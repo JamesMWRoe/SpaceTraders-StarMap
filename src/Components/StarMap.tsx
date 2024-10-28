@@ -1,25 +1,39 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StarmapInfo } from "../Types/StarmapInfo";
 import { useAgentContext } from "../Context/AgentContext";
 import { GetSystemFromWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
+import Canvas from "./Canvas";
 
 export default function StarMap()
 {
   const [ starmapInfo, setStarmapInfo ] = useState<StarmapInfo | undefined>(undefined);
-  const [ resp, setResp ] = useState("");
+  const [ isLoaded, setIsLoaded ] = useState(false);
 
   const { agent } = useAgentContext();
 
-  if (!starmapInfo)
-  {  LoadStarmap();  }
+  const LoadStarmap = useCallback(loadStarmap, [agent.headquarters, starmapInfo]);
+
+  useEffect( () => {
+    if (!starmapInfo)
+    {  LoadStarmap();  }
+
+    if(starmapInfo)
+    { setIsLoaded(true); }
+
+  }, [setIsLoaded, starmapInfo]);
+
+  if (!isLoaded)
+  {  return <span>Loading...</span>  }
+  if(!starmapInfo)
+  {  return <span>Error ocurred, please try again later...</span>  }
 
   return (
     <>
-      <span className="respData">{resp}</span>
+      <Canvas starmapInfo={starmapInfo} />
     </>
   )
 
-  async function LoadStarmap()
+  async function loadStarmap()
   {
 
     const systemSymbol = GetSystemFromWaypointSymbol(agent.headquarters);
@@ -42,26 +56,20 @@ export default function StarMap()
       });
 
       pagePromiseArray.push(pageResp);
-      console.log(`getting page: ${i}/${numberOfPages} `);
 
     }
 
     const pageData = await Promise.all(pagePromiseArray);
 
-    console.log(pageData);
-
     const pageJson = await Promise.all(pageData.map( resp => resp.json()));
-
-    console.log(pageJson);
 
     const data = pageJson.reduce((arr, json) => {
       return arr.concat(json.data);
     }, []);
 
-    console.log(data);
-
     setStarmapInfo({...starmapInfo, waypointArray: data});
-    setResp(JSON.stringify(pageJson, null, 2));
 
   } 
+
+  
 }
