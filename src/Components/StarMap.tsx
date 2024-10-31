@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StarmapInfo } from "../Types/StarmapInfo";
 import { useAgentContext } from "../Context/AgentContext";
 import { GetSystemFromWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
-import Canvas from "./Canvas";
+import StarmapCanvas from "./StarmapCanvas";
 
 export default function StarMap()
 {
@@ -20,6 +20,7 @@ export default function StarMap()
     if(starmapInfo)
     { setIsLoaded(true); }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setIsLoaded, starmapInfo]);
 
   if (!isLoaded)
@@ -29,7 +30,7 @@ export default function StarMap()
 
   return (
     <>
-      <Canvas starmapInfo={starmapInfo} />
+      <StarmapCanvas starmapInfo={starmapInfo} />
     </>
   )
 

@@ -2,35 +2,54 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import '../Styles/Canvas.css'
 import { StarmapInfo } from "../Types/StarmapInfo"
 import { Vec2 } from "../Types/Vector2"
+import { Waypoint } from "../Types/Waypoint"
+import { DistanceBetweenVectors } from "../Helpers/VectorMath"
 
 type CanvasProps = 
 {
   starmapInfo: StarmapInfo
 }
 
-export default function Canvas({starmapInfo}: CanvasProps)
+type CanvasClickable =
+{
+  canvasPosition: Vec2;
+  associatedWaypoint: Waypoint;
+}
+
+export default function StarmapCanvas({starmapInfo}: CanvasProps)
 {
   const [mousePos, setMousePos] = useState<Vec2 | null>(null);
   const [mapPosition, setMapPosition] = useState<Vec2> ({x: 0, y: 0});
   const [scale, setScale] = useState(10);
+  const [onScreenWaypoints, setOnscreenWaypoints] = useState<Array<CanvasClickable>>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const waypointRadius = 8;
+
   const draw = useCallback((canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, starmapInfo: StarmapInfo) => 
   {
+    setOnscreenWaypoints([]);
+    console.log('drawing waypoints: ');
     starmapInfo.waypointArray.forEach(waypoint => 
     {
       
       if (Math.abs(scale*(waypoint.x-mapPosition.x)) < (canvas.width/2) && Math.abs(scale*(waypoint.y-mapPosition.y)) < (canvas.height/2 ))
       {
         const canvasPosition = {
-          x: canvas.width/2 - scale*mapPosition.x + scale*waypoint.x,
-          y: canvas.height/2 - scale*mapPosition.y + scale*waypoint.y
+          x: Math.floor(canvas.width/2 - scale*mapPosition.x + scale*waypoint.x),
+          y: Math.floor(canvas.height/2 - scale*mapPosition.y + scale*waypoint.y)
         }
 
         ctx.beginPath();
-        ctx.arc(canvasPosition.x, canvasPosition.y, 8, 0, Math.PI*2);
+        ctx.arc(canvasPosition.x, canvasPosition.y, waypointRadius, 0, Math.PI*2);
         ctx.fill();
+
+        console.log(waypoint);
+        console.log(canvasPosition);
+
+
+        setOnscreenWaypoints(array =>[...array, {canvasPosition: canvasPosition, associatedWaypoint: waypoint}]);
       }
     })
   }, [mapPosition, scale]);
@@ -86,7 +105,6 @@ export default function Canvas({starmapInfo}: CanvasProps)
 
   const updateScale = (e: React.WheelEvent<HTMLCanvasElement>) =>
   {
-    e.preventDefault();
 
     const zoomFactor = -0.01;
     let newScale = scale + e.deltaY*zoomFactor;
@@ -97,7 +115,33 @@ export default function Canvas({starmapInfo}: CanvasProps)
     setScale(newScale);
   }
 
+  const getWaypoint = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) =>
+  {
+    // get mouse position in map coords
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    
+    const canvasClickCoords = { x: e.clientX, y: e.clientY }
+
+    onScreenWaypoints.forEach(waypoint => {
+      const coordsToCheckAgainst = { x: waypoint.canvasPosition.x, y: waypoint.canvasPosition.y }
+
+      if (DistanceBetweenVectors(coordsToCheckAgainst, canvasClickCoords) < waypointRadius)
+      {
+        console.log(waypoint.associatedWaypoint);
+      }
+    });
+  }
+
   return (
-    <canvas id="starmapCanvas" ref={canvasRef} onMouseMove={updateMapPos} onMouseDown={updateClickPos} onMouseUp={resetClickPos} onWheel={updateScale} />
+    <canvas id="starmapCanvas" ref={canvasRef} 
+      onClick={getWaypoint} 
+      onMouseMove={updateMapPos} 
+      onMouseDown={updateClickPos} 
+      onMouseUp={resetClickPos} 
+      onWheel={updateScale}
+    />
   )
 }
