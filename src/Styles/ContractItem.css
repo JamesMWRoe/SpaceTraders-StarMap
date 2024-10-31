@@ -1,0 +1,35 @@
+.contractListItem
+{
+  border: rgba(255, 255, 255, 0.87) 2px solid;
+  border-radius: 5px;
+}
+
+.contractHeadSection
+{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em;
+}
+
+.contractMainSection
+{
+  overflow: hidden;
+  max-height: 0;
+}
+
+.contractTermsSection, .contractsPaymentSection
+{
+  padding: 0 0.5em;
+}
+
+.contractTermsSection, .contractHeadSection
+{ 
+  border-bottom: rgba(255, 255, 255, 0.87) 2px solid;
+}
+
+.contractActions
+{
+  list-style-type: none;
+}
