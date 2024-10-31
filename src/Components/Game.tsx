@@ -1,4 +1,6 @@
 import { useAgentContext } from "../Context/AgentContext"
+import ContractMenu from "./ContractMenu";
+import ShipMenu from "./ShipMenu";
 
 export default function Game()
 {
@@ -8,8 +10,8 @@ export default function Game()
   return(
     <div id="mainGame">
       <h1>Main Game</h1>
-      <p id="agentCallSign">Welcome: {agent.symbol}</p>
-      <p id="agentCredits">Credits: {agent.credits}</p>
+      
+      <ShipMenu />
 
     </div>
     
