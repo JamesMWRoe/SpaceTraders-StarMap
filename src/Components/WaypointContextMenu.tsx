@@ -1,19 +1,25 @@
-import { useState } from "react";
-import { dummyWaypoint } from "../Helpers/DummyWaypoint";
+import { useEffect, useState } from "react";
 import { GetWaypointClassOfWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
 import '../styles/WaypointContextMenu.css'
+import { useSelectedWaypointContext } from "../Context/SelectedWaypointContext";
 
 export default function WaypointContextMenu()
 {
-  const currentWaypoint = dummyWaypoint;
+  const {selectedWaypoint} = useSelectedWaypointContext();
 
-  const [isHidden, setIsHidden] = useState('');
+  const [isHidden, setIsHidden] = useState('isHidden');
 
-  if (!currentWaypoint) return <p>Not yet implemented</p>
+  useEffect(() => {
+    if (!selectedWaypoint) return;
+
+    setIsHidden('');
+  }, [selectedWaypoint]);
+
+  if (!selectedWaypoint) return <></>
 
   const DisplayShipyardButton = () =>
   {
-    const isShipyard = currentWaypoint.traits.some(trait => trait.symbol === 'SHIPYARD');
+    const isShipyard = selectedWaypoint.traits.some(trait => trait.symbol === 'SHIPYARD');
 
     if (!isShipyard) return <></>
 
@@ -22,7 +28,7 @@ export default function WaypointContextMenu()
 
   const DisplayMarketplaceButton = () =>
   {
-    const isMarketplace = currentWaypoint.traits.some(trait => trait.symbol === 'MARKETPLACE');
+    const isMarketplace = selectedWaypoint.traits.some(trait => trait.symbol === 'MARKETPLACE');
 
     if (!isMarketplace) return <></>
 
@@ -37,7 +43,7 @@ export default function WaypointContextMenu()
   return(
     <div id="contextMenu" className={isHidden}>
       <div id="contextHead">
-        <h2 id="contextWaypointSymbol">Waypoint: {currentWaypoint.type}-{GetWaypointClassOfWaypointSymbol(currentWaypoint.symbol)}</h2>
+        <h2 id="contextWaypointSymbol">Waypoint: {selectedWaypoint.type}-{GetWaypointClassOfWaypointSymbol(selectedWaypoint.symbol)}</h2>
         <button id="closeContextMenu" onClick={hideContextMenu}>X</button>
       </div>
       <div id="contextWaypointShops">

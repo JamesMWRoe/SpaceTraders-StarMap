@@ -4,6 +4,7 @@ import { StarmapInfo } from "../Types/StarmapInfo"
 import { Vec2 } from "../Types/Vector2"
 import { Waypoint } from "../Types/Waypoint"
 import { DistanceBetweenVectors } from "../Helpers/VectorMath"
+import { useSelectedWaypointContext } from "../Context/SelectedWaypointContext"
 
 type CanvasProps = 
 {
@@ -18,6 +19,9 @@ type CanvasClickable =
 
 export default function StarmapCanvas({starmapInfo}: CanvasProps)
 {
+
+  const {setSelectedWaypoint} = useSelectedWaypointContext();
+
   const [mousePos, setMousePos] = useState<Vec2 | null>(null);
   const [mapPosition, setMapPosition] = useState<Vec2> ({x: 0, y: 0});
   const [scale, setScale] = useState(10);
@@ -30,7 +34,6 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
   const draw = useCallback((canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, starmapInfo: StarmapInfo) => 
   {
     setOnscreenWaypoints([]);
-    console.log('drawing waypoints: ');
     starmapInfo.waypointArray.forEach(waypoint => 
     {
       
@@ -44,9 +47,6 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
         ctx.beginPath();
         ctx.arc(canvasPosition.x, canvasPosition.y, waypointRadius, 0, Math.PI*2);
         ctx.fill();
-
-        console.log(waypoint);
-        console.log(canvasPosition);
 
 
         setOnscreenWaypoints(array =>[...array, {canvasPosition: canvasPosition, associatedWaypoint: waypoint}]);
@@ -131,6 +131,7 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
       if (DistanceBetweenVectors(coordsToCheckAgainst, canvasClickCoords) < waypointRadius)
       {
         console.log(waypoint.associatedWaypoint);
+        setSelectedWaypoint(waypoint.associatedWaypoint);
       }
     });
   }

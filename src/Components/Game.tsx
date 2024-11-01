@@ -2,6 +2,9 @@ import { useAgentContext } from "../Context/AgentContext"
 import StarMap from "./StarMap";
 import WaypointContextMenu from "./WaypointContextMenu";
 import '../styles/Game.css'
+import { useState } from "react";
+import { Waypoint } from "../Types/Waypoint";
+import SelectedWaypointContextProvider from "../Context/SelectedWaypointContext";
 
 export default function Game()
 {
@@ -9,9 +12,10 @@ export default function Game()
 
   return(
     <div id="mainGame">
-
-      <StarMap />
-      <WaypointContextMenu />
+      <SelectedWaypointContextProvider>
+        <StarMap />
+        <WaypointContextMenu />
+      </SelectedWaypointContextProvider>
     </div>
     
   )
