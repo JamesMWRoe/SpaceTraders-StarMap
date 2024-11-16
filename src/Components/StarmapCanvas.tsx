@@ -5,6 +5,8 @@ import { Vec2 } from "../Types/Vector2"
 import { Waypoint } from "../Types/Waypoint"
 import { DistanceBetweenVectors } from "../Helpers/VectorMath"
 import { useSelectedWaypointContext } from "../Context/SelectedWaypointContext"
+import { Ship } from "../Types/Ship"
+import shipImageURL from "../Images/rocket.png"
 
 type CanvasProps = 
 {
@@ -26,6 +28,7 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
   const [mapPosition, setMapPosition] = useState<Vec2> ({x: 0, y: 0});
   const [scale, setScale] = useState(10);
   const [onScreenWaypoints, setOnscreenWaypoints] = useState<Array<CanvasClickable>>([]);
+  const orbitAngle = -Math.PI/4;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -34,24 +37,12 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
   const draw = useCallback((canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, starmapInfo: StarmapInfo) => 
   {
     setOnscreenWaypoints([]);
-    starmapInfo.waypointArray.forEach(waypoint => 
-    {
-      
-      if (Math.abs(scale*(waypoint.x-mapPosition.x)) < (canvas.width/2) && Math.abs(scale*(waypoint.y-mapPosition.y)) < (canvas.height/2 ))
-      {
-        const canvasPosition = {
-          x: Math.floor(canvas.width/2 - scale*mapPosition.x + scale*waypoint.x),
-          y: Math.floor(canvas.height/2 - scale*mapPosition.y + scale*waypoint.y)
-        }
 
-        ctx.beginPath();
-        ctx.arc(canvasPosition.x, canvasPosition.y, waypointRadius, 0, Math.PI*2);
-        ctx.fill();
+    console.log(starmapInfo.shipArray);
+    starmapInfo.waypointArray.forEach(waypoint => {drawWaypoint(waypoint, canvas, ctx)});
+    starmapInfo.shipArray.forEach(ship => {drawShip(ship, canvas, ctx)});
 
-
-        setOnscreenWaypoints(array =>[...array, {canvasPosition: canvasPosition, associatedWaypoint: waypoint}]);
-      }
-    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapPosition, scale]);
 
   useEffect(() => 
@@ -70,7 +61,10 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
     context.fillStyle = '#000';
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = '#FFF';
-    
+    context.strokeStyle = '#FFF';
+
+
+    console.log(starmapInfo.waypointArray);
     draw(canvas, context, starmapInfo);
     
   }, [draw, starmapInfo, mapPosition, scale]);
@@ -85,8 +79,8 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
     let deltaX = (mousePos.x - e.clientX)/scale;
     let deltaY = (mousePos.y - e.clientY)/scale;
 
-    if (Math.abs(mapPosition.x + deltaX) > 1000) deltaX = 0;
-    if (Math.abs(mapPosition.y + deltaY) > 1000) deltaY = 0; 
+    if (Math.abs(mapPosition.x + deltaX) > 500) deltaX = 0;
+    if (Math.abs(mapPosition.y + deltaY) > 500) deltaY = 0; 
 
     setMapPosition({x: mapPosition.x + deltaX, y: mapPosition.y + deltaY});
 
@@ -124,9 +118,13 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
     if (!context) return;
     
     const canvasClickCoords = { x: e.clientX, y: e.clientY }
+    console.log('clicked on:');
+    console.log(canvasClickCoords);
 
+    console.log('checking against:');
     onScreenWaypoints.forEach(waypoint => {
       const coordsToCheckAgainst = { x: waypoint.canvasPosition.x, y: waypoint.canvasPosition.y }
+      console.log(coordsToCheckAgainst);
 
       if (DistanceBetweenVectors(coordsToCheckAgainst, canvasClickCoords) < waypointRadius)
       {
@@ -145,4 +143,108 @@ export default function StarmapCanvas({starmapInfo}: CanvasProps)
       onWheel={updateScale}
     />
   )
+
+  function drawWaypoint(waypoint: Waypoint, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D)
+  {  
+    if (Math.abs(scale*(waypoint.x-mapPosition.x)) < (canvas.width/2) && Math.abs(scale*(waypoint.y-mapPosition.y)) < (canvas.height/2 ))
+    {
+      const waypointCanvasPosition = {
+        x: Math.floor(canvas.width/2 - scale*mapPosition.x + scale*waypoint.x),
+        y: Math.floor(canvas.height/2 - scale*mapPosition.y + scale*waypoint.y)
+      }
+
+      ctx.beginPath();
+      ctx.arc(waypointCanvasPosition.x, waypointCanvasPosition.y, waypointRadius, 0, Math.PI*2);
+      ctx.fill();
+
+
+      setOnscreenWaypoints(array =>[...array, {canvasPosition: waypointCanvasPosition, associatedWaypoint: waypoint}]);
+    }
+  }
+
+  function drawShip(ship: Ship, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D)
+  {
+
+    switch(ship.nav.status)
+    {
+      case "IN_ORBIT":
+      {
+        console.log("ship docked");
+        console.log(ship.nav);
+        const orbitingWaypoint = ship.nav.route.destination;
+        if(Math.abs(scale*(orbitingWaypoint.x-mapPosition.x)) < (canvas.width/2) && Math.abs(scale*(orbitingWaypoint.y-mapPosition.y)) < (canvas.height/2))
+        {
+          console.log("drawing docked ship");
+          
+          const waypointCanvasPos = {
+            x: Math.floor(canvas.width/2 - scale*mapPosition.x + scale*orbitingWaypoint.x),
+            y: Math.floor(canvas.height/2 - scale*mapPosition.y + scale*orbitingWaypoint.y)
+          }
+
+          const shipCanvasPos = {
+            x: Math.floor(waypointCanvasPos.x -14),
+            y: Math.floor(waypointCanvasPos.y -25) 
+          }
+          const shipImage = new Image();
+          shipImage.src = shipImageURL;
+          
+          shipImage.onload = () => 
+          {  
+            ctx.save();
+            console.log('drawing ship')
+            console.log(ship);
+            console.log(shipCanvasPos);
+            ctx.translate(shipCanvasPos.x, shipCanvasPos.y);
+            ctx.rotate((-45/360)*2*Math.PI);
+
+            ctx.drawImage(shipImage, 0, 0, 20, 20);
+            ctx.restore();
+          }
+          
+        }
+        return;
+      }
+      case "IN_TRANSIT":
+      case "DOCKED":
+      {
+        console.log("ship docked");
+        console.log(ship.nav);
+        const orbitingWaypoint = ship.nav.route.destination;
+        if(Math.abs(scale*(orbitingWaypoint.x-mapPosition.x)) < (canvas.width/2) && Math.abs(scale*(orbitingWaypoint.y-mapPosition.y)) < (canvas.height/2))
+        {
+          console.log("drawing docked ship");
+          
+          const waypointCanvasPos = {
+            x: Math.floor(canvas.width/2 - scale*mapPosition.x + scale*orbitingWaypoint.x),
+            y: Math.floor(canvas.height/2 - scale*mapPosition.y + scale*orbitingWaypoint.y)
+          }
+
+          const shipCanvasPos = {
+            x: Math.floor(waypointCanvasPos.x + 20*Math.cos(orbitAngle)),
+            y: Math.floor(waypointCanvasPos.y + 20*Math.sin(orbitAngle)) 
+          }
+          const shipImage = new Image();
+          shipImage.src = shipImageURL;
+          
+          shipImage.onload = () => 
+          {  
+            ctx.save();
+            console.log('drawing ship')
+            console.log(ship);
+            console.log(shipCanvasPos);
+            ctx.translate(shipCanvasPos.x, shipCanvasPos.y);
+            ctx.rotate(((-45/360)*2*Math.PI) - orbitAngle);
+
+            ctx.drawImage(shipImage, 0, 0, 20, 20);
+            ctx.restore();
+          }
+          
+        }
+        return;
+      }
+
+    }
+
+
+  }
 }

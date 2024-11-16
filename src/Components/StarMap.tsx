@@ -3,12 +3,15 @@ import { StarmapInfo } from "../Types/StarmapInfo";
 import { useAgentContext } from "../Context/AgentContext";
 import { GetSystemFromWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
 import StarmapCanvas from "./StarmapCanvas";
+import { GetDataList } from "../Helpers/ApiRequests";
+import { useTokenContext } from "../Context/TokenContext";
 
 export default function StarMap()
 {
   const [ starmapInfo, setStarmapInfo ] = useState<StarmapInfo | undefined>(undefined);
   const [ isLoaded, setIsLoaded ] = useState(false);
 
+  const { agentToken } = useTokenContext();
   const { agent } = useAgentContext();
 
   const LoadStarmap = useCallback(loadStarmap, [agent.headquarters, starmapInfo]);
@@ -34,41 +37,17 @@ export default function StarMap()
     </>
   )
 
-  async function loadStarmap()
+  async function loadStarmap() // replace with getlist functionality. also get ships... somehow
   {
 
     const systemSymbol = GetSystemFromWaypointSymbol(agent.headquarters);
 
-    const resp = await fetch(`https://api.spacetraders.io/v2/systems/${systemSymbol}/waypoints?limit=1`, {
-      headers: {  Accept: "application/json"  }
-    });
+    const waypointArrayData = await GetDataList(`/systems/${systemSymbol}/waypoints`);
+    const shipArrayData = await GetDataList(`/my/ships`, agentToken);
 
-    const json = await resp.json();
-    const numberOfWaypoints = json.meta.total;
+    console.log(shipArrayData);
 
-    const numberOfPages = Math.ceil(numberOfWaypoints/20);
-
-    const pagePromiseArray = [];
-
-    for(let i=1; i<=numberOfPages; i++)
-    {
-      const pageResp = fetch(`https://api.spacetraders.io/v2/systems/${systemSymbol}/waypoints?limit=20&page=${i}`, {
-        headers: {  Accept: "application/json"  }
-      });
-
-      pagePromiseArray.push(pageResp);
-
-    }
-
-    const pageData = await Promise.all(pagePromiseArray);
-
-    const pageJson = await Promise.all(pageData.map( resp => resp.json()));
-
-    const data = pageJson.reduce((arr, json) => {
-      return arr.concat(json.data);
-    }, []);
-
-    setStarmapInfo({...starmapInfo, waypointArray: data});
+    setStarmapInfo({...starmapInfo, waypointArray: waypointArrayData, shipArray: shipArrayData});
 
   } 
 

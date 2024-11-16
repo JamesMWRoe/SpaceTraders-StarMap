@@ -17,6 +17,8 @@ type Registration =
 type Nav =
 {
   waypointSymbol: string;
+  route: Route;
+  status: string;
 }
 
 type Cargo = 
@@ -37,10 +39,25 @@ type Fuel =
   }
 }
 
+type Route =
+{
+  destination: RouteWaypoint;
+  origin: RouteWaypoint;
+  departureTime: string;
+  arrival: string;
+}
+
 type CargoItem =
 {
   symbol: string;
   name: string;
   description: string;
   units: number;
+}
+
+type RouteWaypoint =
+{
+  symbol: string;
+  x: number;
+  y: number;
 }
