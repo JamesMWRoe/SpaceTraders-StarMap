@@ -47,7 +47,6 @@ export async function GetDataList(relUrl: string, authId: null | string = null)
     }
   }
 
-
   const firstPageResp = await fetch(apiUrl, requestInit);
   const json = await firstPageResp.json();
 
@@ -59,16 +58,15 @@ export async function GetDataList(relUrl: string, authId: null | string = null)
 
   const respArray = [];
 
-  for (let i=2; i<numberOfPages; i++)
+  for (let i=2; i<=numberOfPages; i++)
   {
     const pageResp = await fetch(`${apiUrl}&page=${i}`, requestInit);
     respArray.push(pageResp);
   }
-
+  
   const completeResponse = await Promise.all(respArray);
   const completeJson = await Promise.all(completeResponse.map(resp => resp.json()));
 
-  data.concat(completeJson.map(json => json.data));
-  
-  return data;
+  const completeData = data.concat(...completeJson.map(json => json.data));
+  return completeData;
 }
