@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
 import { StarmapInfo } from "../Types/StarmapInfo";
-import { Vec2 } from "../Types/Vector2";
+import { Map } from "../Types/Map";
 import { Waypoint } from "../Types/Waypoint";
 import { Ship } from "../Types/Ship";
 import shipImageURL from "../Images/rocket.png"
-
-type Map = {
-  centre: Vec2;
-  mousePos: Vec2 | null;
-  scale: number;
-  canvasRef: React.RefObject<HTMLCanvasElement>;
-}
+import { GetCanvasPositionFromMapPosition, PointIsOnMap } from "../Helpers/MapHelperFunctions";
+import Vec2 from "../Classes/Vector2";
 
 type useDrawStarmapProps =
 {
@@ -61,106 +56,147 @@ export default function useDrawStarmap({map, starmapData}: useDrawStarmapProps)
     setDrawnStarmapData([]);
 
     console.log(starmapInfo.shipArray);
-    starmapInfo.waypointArray.forEach(waypoint => {drawWaypoint(waypoint, canvas, ctx)});
-    starmapInfo.shipArray.forEach(ship => {drawShip(ship, canvas, ctx)});
+    starmapInfo.waypointArray.forEach(waypoint => {  drawWaypoint(waypoint, starmapInfo.waypointArray, canvas, ctx)  });
+    starmapInfo.shipArray.forEach(ship => {  drawShip(ship, canvas, ctx)  });
   }
 
-  function drawWaypoint(waypoint: Waypoint, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D)
+  function drawWaypoint(waypoint: Waypoint, waypointArray: Array<Waypoint>, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D)
   {  
-    if (Math.abs(map.scale*(waypoint.x-map.centre.x)) < (canvas.width/2) && Math.abs(map.scale*(waypoint.y-map.centre.y)) < (canvas.height/2 ))
+    const waypointVec = new Vec2(waypoint.x, waypoint.y)
+    if (!PointIsOnMap(waypointVec, map, canvas)) return;
+
+    const waypointCentrePosition = GetCanvasPositionFromMapPosition(waypointVec, map, canvas);
+
+    let waypointCanvasPosition = waypointCentrePosition;
+
+    if (!waypoint.orbits)
     {
-      const waypointCanvasPosition = {
-        x: Math.floor(canvas.width/2 - map.scale*map.centre.x + map.scale*waypoint.x),
-        y: Math.floor(canvas.height/2 - map.scale*map.centre.y + map.scale*waypoint.y)
-      }
-
       ctx.beginPath();
-      ctx.arc(waypointCanvasPosition.x, waypointCanvasPosition.y, waypointRadius, 0, Math.PI*2);
+      ctx.arc(waypointCentrePosition.x, waypointCentrePosition.y, waypointRadius, 0, Math.PI*2);
       ctx.fill();
-
-
-      setDrawnStarmapData(array =>[...array, {canvasPosition: waypointCanvasPosition, associatedWaypoint: waypoint}]);
     }
+    else
+    {
+      const orbitingWaypoint = waypointArray.find(orbiting => orbiting.symbol == waypoint.orbits);
+      const orbitIndex = orbitingWaypoint?.orbitals.findIndex(orbital => orbital.symbol == waypoint.symbol);
+
+      if (orbitIndex == undefined) return new Error('orbit index does not exist');
+
+      console.log('waypoint orbits another waypoint');
+      console.log('Orbit Index: ' + orbitIndex);
+
+      const orbitLength = orbitIndex + 2;
+      const waypointOrbitOffset = new Vec2(orbitLength * 20 * Math.cos(orbitAngle), orbitLength* 20 * Math.sin(orbitAngle));
+
+      ctx.save()
+      ctx.translate(waypointCentrePosition.x, waypointCentrePosition.y);
+      ctx.beginPath();
+      ctx.arc(0, 0, orbitLength * 20, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(waypointOrbitOffset.x, waypointOrbitOffset.y, waypointRadius, 0, 2*Math.PI)
+      ctx.fill();
+      ctx.restore();
+
+
+      waypointCanvasPosition = waypointCentrePosition.add(waypointOrbitOffset);
+    }
+
+    setDrawnStarmapData(array =>[...array, {canvasPosition: waypointCanvasPosition, associatedWaypoint: waypoint}]);
+    
   }
 
   function drawShip(ship: Ship, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D)
   {
 
+    const shipImage = new Image();
+    shipImage.src = shipImageURL;
+
     switch(ship.nav.status)
     {
       case "IN_ORBIT":
       {
-        console.log("ship docked");
-        console.log(ship.nav);
-        const orbitingWaypoint = ship.nav.route.destination;
-        if(Math.abs(map.scale*(orbitingWaypoint.x-map.centre.x)) < (canvas.width/2) && Math.abs(map.scale*(orbitingWaypoint.y-map.centre.y)) < (canvas.height/2))
+        const orbitVec = new Vec2(ship.nav.route.destination.x, ship.nav.route.destination.y)
+        if(!PointIsOnMap(orbitVec, map, canvas)) return;
+
+        console.log("drawing orbiting ship");
+        
+        const waypointCanvasPos = GetCanvasPositionFromMapPosition(orbitVec, map, canvas);
+
+        const shipCanvasPos = 
         {
-          console.log("drawing docked ship");
-          
-          const waypointCanvasPos = {
-            x: Math.floor(canvas.width/2 - map.scale*map.centre.x + map.scale*orbitingWaypoint.x),
-            y: Math.floor(canvas.height/2 - map.scale*map.centre.y + map.scale*orbitingWaypoint.y)
-          }
-
-          const shipCanvasPos = {
-            x: Math.floor(waypointCanvasPos.x -14),
-            y: Math.floor(waypointCanvasPos.y -25) 
-          }
-          const shipImage = new Image();
-          shipImage.src = shipImageURL;
-          
-          shipImage.onload = () => 
-          {  
-            ctx.save();
-            console.log('drawing ship')
-            console.log(ship);
-            console.log(shipCanvasPos);
-            ctx.translate(shipCanvasPos.x, shipCanvasPos.y);
-            ctx.rotate((-45/360)*2*Math.PI);
-
-            ctx.drawImage(shipImage, 0, 0, 20, 20);
-            ctx.restore();
-          }
-          
+          x: Math.floor(waypointCanvasPos.x -14),
+          y: Math.floor(waypointCanvasPos.y -25) 
         }
+
+        shipImage.onload = () => 
+        {  
+          ctx.save();
+          console.log('drawing ship')
+          console.log(ship);
+          console.log(shipCanvasPos);
+          ctx.translate(shipCanvasPos.x, shipCanvasPos.y);
+          ctx.rotate((-45/360)*2*Math.PI);
+
+          ctx.drawImage(shipImage, 0, 0, 20, 20);
+          ctx.restore();
+        }
+          
         return;
       }
       case "IN_TRANSIT":
+      {
+        const destination = new Vec2(ship.nav.route.destination.x, ship.nav.route.destination.y);
+        const origin = new Vec2(ship.nav.route.origin.x, ship.nav.route.origin.y);
+
+        const totalTravelTime = Number(ship.nav.route.arrival) - Number(ship.nav.route.departureTime);
+        const ElapsedTime = Number(Date()) - Number(ship.nav.route.departureTime);
+
+        const percentTraveled = (ElapsedTime/totalTravelTime);
+        const totalTravelVector = destination.add(origin.negative());
+        const currentTravelVector = totalTravelVector.multiply(percentTraveled);
+
+        const shipVector = origin.add(currentTravelVector);
+
+        if(!PointIsOnMap(shipVector, map, canvas)) return;
+
+        shipImage.onload = () =>
+        {
+          ctx.save()
+
+        }
+
+        return;
+      }
       case "DOCKED":
       {
-        console.log("ship docked");
-        console.log(ship.nav);
-        const orbitingWaypoint = ship.nav.route.destination;
-        if(Math.abs(map.scale*(orbitingWaypoint.x-map.centre.x)) < (canvas.width/2) && Math.abs(map.scale*(orbitingWaypoint.y-map.centre.y)) < (canvas.height/2))
+        const dockVec = new Vec2(ship.nav.route.destination.x, ship.nav.route.destination.y);
+        if(!PointIsOnMap(dockVec, map, canvas)) return;
+        
+        console.log("drawing docked ship");
+        
+        const waypointCanvasPos = GetCanvasPositionFromMapPosition(dockVec, map, canvas);
+
+        const shipCanvasPos = 
         {
-          console.log("drawing docked ship");
-          
-          const waypointCanvasPos = {
-            x: Math.floor(canvas.width/2 - map.scale*map.centre.x + map.scale*orbitingWaypoint.x),
-            y: Math.floor(canvas.height/2 - map.scale*map.centre.y + map.scale*orbitingWaypoint.y)
-          }
-
-          const shipCanvasPos = {
-            x: Math.floor(waypointCanvasPos.x + 20*Math.cos(orbitAngle)),
-            y: Math.floor(waypointCanvasPos.y + 20*Math.sin(orbitAngle)) 
-          }
-          const shipImage = new Image();
-          shipImage.src = shipImageURL;
-          
-          shipImage.onload = () => 
-          {  
-            ctx.save();
-            console.log('drawing ship')
-            console.log(ship);
-            console.log(shipCanvasPos);
-            ctx.translate(shipCanvasPos.x, shipCanvasPos.y);
-            ctx.rotate(((-45/360)*2*Math.PI) - orbitAngle);
-
-            ctx.drawImage(shipImage, 0, 0, 20, 20);
-            ctx.restore();
-          }
-          
+          x: Math.floor(waypointCanvasPos.x + 20*Math.cos(orbitAngle)),
+          y: Math.floor(waypointCanvasPos.y + 20*Math.sin(orbitAngle)) 
         }
+
+        
+        shipImage.onload = () => 
+        {  
+          ctx.save();
+          console.log('drawing ship')
+          console.log(ship);
+          console.log(shipCanvasPos);
+          ctx.translate(shipCanvasPos.x, shipCanvasPos.y);
+          ctx.rotate(((-45/360)*2*Math.PI) - orbitAngle);
+
+          ctx.drawImage(shipImage, 0, 0, 20, 20);
+          ctx.restore();
+        }
+          
         return;
       }
     }
