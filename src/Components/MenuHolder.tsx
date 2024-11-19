@@ -1,17 +1,21 @@
-import ContractMenu from "./ContractMenu";
-import ShipMenu from "./ShipMenu";
-import SideMenu from "./SideMenu";
+import { useState } from "react";
+import ShipyardMenu from "./ShipyardMenu";
 import WaypointContextMenu from "./WaypointContextMenu";
+import { Shipyard } from "../Types/Shipyard";
+import { Market } from "../Types/Market";
+import "../Styles/Menu.css"
 
 export default function MenuHolder()
 {
-  return(
-  <div id="MenuHolder">
-    <SideMenu />
-    <ShipMenu />
-    <ContractMenu />
+  const [shipyard, setShipyard] = useState<Shipyard | null>(null);
+  const [market, setMarket] = useState<Market | null>(null);
 
-    <WaypointContextMenu />
+
+  return(
+  <div id="menuHolder">
+
+    <WaypointContextMenu setShipyard={setShipyard} setMarket={setMarket} />
+    <ShipyardMenu shipyard={shipyard} setShipyard={setShipyard} />
   </div>
   )
 }

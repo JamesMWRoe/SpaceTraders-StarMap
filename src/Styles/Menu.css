@@ -1,0 +1,47 @@
+#menuHolder
+{
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  max-width: 100%;
+  display:flex;
+  flex-direction: row-reverse;
+}
+
+.menu
+{
+  position: relative;
+  background-color: #242424;
+  height: 100%;
+  width: auto;
+
+  border-left: rgba(255, 255, 255, 0.1) 2px solid;
+
+}
+
+.menu > div
+{
+  padding: 2em;
+}
+
+.menuHead
+{
+  
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  border-bottom: rgba(255, 255, 255, 0.1) 2px solid;
+}
+
+.contextNavButton
+{
+  width: 100%;
+}
+
+.tradeSection
+{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
