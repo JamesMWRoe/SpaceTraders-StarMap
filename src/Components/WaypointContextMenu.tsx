@@ -1,19 +1,25 @@
-import { useEffect, useState } from "react";
 import { GetWaypointClassOfWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
-import '../styles/WaypointContextMenu.css'
 import { useSelectedWaypointContext } from "../Context/SelectedWaypointContext";
+import useOpenCloseMenu from "../Hooks/useOpenCloseMenu";
+import { GetData } from "../Helpers/ApiRequests";
+import { Shipyard } from "../Types/Shipyard";
+import { useStarmapDataContext } from "../Context/StarMapDataContext";
+import { Market } from "../Types/Market";
+import { useTokenContext } from "../Context/TokenContext";
 
-export default function WaypointContextMenu()
+type WaypointContextMenuProps =
 {
-  const {selectedWaypoint} = useSelectedWaypointContext();
+  setShipyard: React.Dispatch<React.SetStateAction<Shipyard | null>>;
+  setMarket: React.Dispatch<React.SetStateAction<Market | null>>;
+}
 
-  const [isHidden, setIsHidden] = useState('isHidden');
+export default function WaypointContextMenu({ setShipyard, setMarket}: WaypointContextMenuProps)
+{
+  const { selectedWaypoint, setSelectedWaypoint } = useSelectedWaypointContext();
+  const { starmapData } = useStarmapDataContext();
+  const { agentToken } = useTokenContext();
 
-  useEffect(() => {
-    if (!selectedWaypoint) return;
-
-    setIsHidden('');
-  }, [selectedWaypoint]);
+  const hiddenClass = useOpenCloseMenu(selectedWaypoint);
 
   if (!selectedWaypoint) return <></>
 
@@ -23,7 +29,7 @@ export default function WaypointContextMenu()
 
     if (!isShipyard) return <></>
 
-    return <button id="contextGotoShipyard" className="contextNavButton" >Go to shipyard</button>
+    return <button type="submit" id="contextGotoShipyard" className="contextNavButton" onClick={UpdateShipyard} >Go to shipyard</button>
   }
 
   const DisplayMarketplaceButton = () =>
@@ -32,27 +38,53 @@ export default function WaypointContextMenu()
 
     if (!isMarketplace) return <></>
 
-    return <button id="contextGoToMarketPlace" className="contextNavButton">Go to marketplace</button>
+    return <button id="contextGoToMarketPlace" className="contextNavButton" onClick={UpdateMarket}>Go to marketplace</button>
   }
 
-  const hideContextMenu = () =>
+  const DisplayRelatedShips = () =>
   {
-    setIsHidden('hiddenMenu')
+    return starmapData.shipArray.map(ship => ship.nav.waypointSymbol===selectedWaypoint.symbol?<p>{ship.registration.name}</p>:<></>);
+  }
+
+  const closeContextMenu = () =>
+  {
+    setSelectedWaypoint(null);
   }
 
   return(
-    <div id="contextMenu" className={isHidden}>
-      <div id="contextHead">
+    <div id="contextMenu" className={`menu ${hiddenClass}`}>
+      <div className="menuHead">
         <h2 id="contextWaypointSymbol">Waypoint: {selectedWaypoint.type}-{GetWaypointClassOfWaypointSymbol(selectedWaypoint.symbol)}</h2>
-        <button id="closeContextMenu" onClick={hideContextMenu}>X</button>
+        <button id="closeContextMenu" onClick={closeContextMenu}>X</button>
       </div>
       <div id="contextWaypointShops">
         {DisplayShipyardButton()}
         {DisplayMarketplaceButton()}
       </div>
+      <div id="ships">
+        {DisplayRelatedShips()}
+      </div>
 
     </div>
   );
+
+  async function UpdateShipyard()
+  {
+    if (!selectedWaypoint) return;
+    
+    const shipyardData = await GetData(`/systems/${selectedWaypoint.systemSymbol}/waypoints/${selectedWaypoint.symbol}/shipyard`, agentToken)
+
+    setShipyard(shipyardData);
+  }
+
+  async function UpdateMarket()
+  {
+    if (!selectedWaypoint) return
+
+    const marketData = await GetData(`/systems/${selectedWaypoint.systemSymbol}/waypoints/${selectedWaypoint.symbol}/market`, agentToken);
+
+    setMarket(marketData);
+  }
 
   
 }
