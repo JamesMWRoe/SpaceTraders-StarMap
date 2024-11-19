@@ -1,4 +1,4 @@
-export async function GetData(relUrl: string, authId = null)
+export async function GetData(relUrl: string, authId: null | string = null)
 {
   const apiUrl = `https://api.spacetraders.io/v2${relUrl}`;
   let requestInit
@@ -50,7 +50,10 @@ export async function GetDataList(relUrl: string, authId: null | string = null)
   const firstPageResp = await fetch(apiUrl, requestInit);
   const json = await firstPageResp.json();
 
-  const numberOfPages = Math.floor(json.meta.total/20);
+  console.log('meta data: ');
+  console.log(json.meta);
+
+  const numberOfPages = Math.ceil(json.meta.total/20);
 
   const data = json.data;
 
