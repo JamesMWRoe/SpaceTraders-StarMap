@@ -1,7 +1,7 @@
 export async function GetData(relUrl: string, authId: null | string = null)
 {
   const apiUrl = `https://api.spacetraders.io/v2${relUrl}`;
-  let requestInit
+  let requestInit;
   
   if (authId)
   {
@@ -72,4 +72,36 @@ export async function GetDataList(relUrl: string, authId: null | string = null)
 
   const completeData = data.concat(...completeJson.map(json => json.data));
   return completeData;
+}
+
+export async function PostData(relUrl: string, bodyObject: unknown, authId: string | null = null)
+{
+  const apiUrl = `https://api.spacetraders.io/v2${relUrl}`;
+
+  const requestInit = {
+    method: 'POST',
+    headers: {  
+      Accept: 'applicaton/json',
+      "Content-Type": 'application/json'
+    },
+    body: JSON.stringify(bodyObject)
+  };
+
+  if (authId)
+  {
+    requestInit.headers.Authorization = `Bearer ${authId}`
+  }
+
+  console.log(requestInit);
+
+  const resp = await fetch(apiUrl, requestInit);
+  const json = await resp.json();
+
+  const returnData = {
+    respStatus: resp.status,
+    data: json.data
+  }
+
+  return returnData
+
 }

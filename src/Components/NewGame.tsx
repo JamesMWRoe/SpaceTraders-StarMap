@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTokenContext } from '../Context/TokenContext';
 import { Agent } from '../Types/Agent';
+import { PostData } from '../Helpers/ApiRequests';
 
 type NewGameProps =
 {
@@ -35,28 +36,23 @@ export default function NewGame({setAgent}: NewGameProps)
 
   async function Signup()
   {
-    console.log(`symbol: ` + symbol);
-    console.log(`faction: ` + faction);
-
-    const resp = await fetch('https://api.spacetraders.io/v2/register', {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        symbol: symbol,
-        faction: faction
-      })
-    });
-
-    const json = await resp.json();
-
-    if (resp.ok)
-    {
-      console.log('Agent Token: ' + json.data.token);
-      setAgentToken(json.data.token);
-      setAgent(json.data.agent);
+    const signupBody = {
+      symbol: symbol,
+      faction: faction
     }
 
-    setResp(JSON.stringify(json, null, 2));
+    const signupData = await PostData('/register', signupBody);
+
+    
+    if (signupData.respStatus == 201)
+    {
+      console.log('Agent Token: ' + signupData.data.token);
+      setAgentToken(signupData.data.token);
+      setAgent(signupData.data.agent);
+    }
+    
+    console.log(signupData.respStatus);
+    setResp(JSON.stringify(signupData.data, null, 2));
 
   }
 }
