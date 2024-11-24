@@ -18,7 +18,7 @@ export default function Game()
 
   const [ starmapInfo, setStarmapInfo ] = useState<StarmapInfo | undefined>(undefined);
   const [ isLoaded, setIsLoaded ] = useState(false);
-  const { hiddenClass: contextMenuHiddenClass, setIsOpen: setContextMenuIsOpen } = useOpenCloseMenu();
+  const [contextMenuHiddenClass, setIsContextMenuOpen] = useOpenCloseMenu();
 
   useEffect( () => 
   {
@@ -41,8 +41,8 @@ export default function Game()
     <div id="mainGame">
       <SelectedWaypointContextProvider>
       <StarMapDataContextProvider starmapData={starmapInfo} setStarmapData={setStarmapInfo}>
-        <Starmap starmapInfo={starmapInfo} setContextMenuIsOpen={setContextMenuIsOpen} />
-        <MenuHolder contextMenuHiddenClass={contextMenuHiddenClass} setContextMenuIsOpen={setContextMenuIsOpen} />
+        <Starmap starmapInfo={starmapInfo} setContextMenuIsOpen={setIsContextMenuOpen} />
+        <MenuHolder contextMenuHiddenClass={contextMenuHiddenClass} setIsContextMenuOpen={setIsContextMenuOpen} />
       </StarMapDataContextProvider>
       </SelectedWaypointContextProvider>
     </div>

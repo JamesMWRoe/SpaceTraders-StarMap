@@ -1,5 +1,8 @@
 import { Contract } from "../Types/Contract"
 import "../Styles/ContractItem.css"
+import { PostData } from "../Helpers/ApiRequests"
+import { useTokenContext } from "../Context/TokenContext"
+import { useAgentContext } from "../Context/AgentContext"
 
 type ContractItemProps =
 {
@@ -8,12 +11,15 @@ type ContractItemProps =
 
 export default function ContractItem({contract: contract}: ContractItemProps)
 {
+  const { agentToken } = useTokenContext();
+  const { setAgent } = useAgentContext();
+
   return(
   <li className="contractListItem">
     <div className="contractHeadSection">
       <p className="contractType">Contract Type: {contract.type}</p>
       <ul className="contractActions">
-        <li className="acceptContract"><button>A</button></li>
+        <li className="acceptContract"><button onClick={AcceptContract}>A</button></li>
       </ul>
     </div>
     <div className="contractMainSection">
@@ -30,4 +36,16 @@ export default function ContractItem({contract: contract}: ContractItemProps)
     </div>
   </li>
   )
+
+  async function AcceptContract()
+  {
+    const postBody = {};
+
+    const contractData = await PostData(`/my/contracts/${contract.id}/accept`, postBody, agentToken);
+
+    if (contractData.respStatus == 200)
+    {
+      setAgent(contractData.data.agent);
+    }
+  }
 }

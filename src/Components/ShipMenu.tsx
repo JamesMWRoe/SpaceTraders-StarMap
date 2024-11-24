@@ -4,7 +4,13 @@ import { useTokenContext } from "../Context/TokenContext";
 import { Ship } from "../Types/Ship";
 import ShipItem from "./ShipItem";
 
-export default function ShipMenu()
+type ShipMenuProps =
+{
+  shipMenuHiddenClass: 'hiddenMenu' | '';
+  setIsShipMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export default function ShipMenu({shipMenuHiddenClass, setIsShipMenuOpen}: ShipMenuProps)
 {
   const [shipList, setShipList] = useState<Array<Ship> | null>(null);
 
@@ -28,11 +34,15 @@ export default function ShipMenu()
   if (!shipList) return ( <p className="loading">Loading Ships...</p> );
 
   return(
-  <>
-    <h2 id="fleetMenuHeader">Your Fleet</h2>
+  <div id="fleetMenu" className={`menu ${shipMenuHiddenClass}`}>
+    <div id="fleetMenuHead">
+      <h2 id="fleetMenuHeader">Your Fleet</h2>
+      <button onClick={() => {setIsShipMenuOpen(false)}}>X</button>
+    </div>
+    
     <ul id="shipList">
       {shipList.map(shipItem => <ShipItem ship={shipItem} />)}
     </ul>
-  </>
+  </div>
   )
 }

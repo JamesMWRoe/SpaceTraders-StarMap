@@ -1,29 +1,22 @@
-import { useState } from "react";
-import ShipyardMenu from "./ShipyardMenu";
-import WaypointContextMenu from "./WaypointContextMenu";
-import { Shipyard } from "../Types/Shipyard";
-import { Market } from "../Types/Market";
+
 import "../Styles/Menu.css"
-import useOpenCloseMenu from "../Hooks/useOpenCloseMenu";
+import ContextualMenus from "./ContextualMenus";
+import SideMenus from "./SideMenus";
+
 
 type MenuHolderProps = 
 {
   contextMenuHiddenClass: 'hiddenMenu' | '';
-  setContextMenuIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsContextMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function MenuHolder({ contextMenuHiddenClass, setContextMenuIsOpen }: MenuHolderProps)
+export default function MenuHolder({ contextMenuHiddenClass, setIsContextMenuOpen }: MenuHolderProps)
 {
-  const [shipyard, setShipyard] = useState<Shipyard | null>(null);
-  const [market, setMarket] = useState<Market | null>(null);
-
-  const { hiddenClass: shipyardHiddenClass, setIsOpen: setShipyardIsOpen} = useOpenCloseMenu();
-  const { hiddenClass: marketHiddenClass, setIsOpen: setMarketIsOpen} = useOpenCloseMenu();
-
+  
   return(
   <div id="menuHolder">
-    <WaypointContextMenu setShipyard={setShipyard} setMarket={setMarket} setShipyardIsOpen={setShipyardIsOpen} hiddenClass={contextMenuHiddenClass} setMarketIsOpen={setMarketIsOpen} setIsOpen={setContextMenuIsOpen}  />
-    <ShipyardMenu hiddenClass={shipyardHiddenClass} shipyard={shipyard} setShipyardIsOpen={setShipyardIsOpen} />
+    <SideMenus />
+    <ContextualMenus contextMenuHiddenClass={contextMenuHiddenClass} setIsContextMenuOpen={setIsContextMenuOpen} />
   </div>
   )
 }

@@ -1,4 +1,4 @@
-#menuHolder
+#sideMenus, #contextualMenus 
 {
   position: absolute;
   top: 0;
@@ -9,6 +9,15 @@
   flex-direction: row-reverse;
 }
 
+#sideMenuOpenButton
+{
+  position: absolute;
+  top: 2em;
+  right: 2em;
+  height: auto;
+  width: auto;
+}
+
 .menu
 {
   position: relative;
@@ -17,7 +26,6 @@
   width: auto;
 
   border-left: rgba(255, 255, 255, 0.1) 2px solid;
-
 }
 
 .menu > div

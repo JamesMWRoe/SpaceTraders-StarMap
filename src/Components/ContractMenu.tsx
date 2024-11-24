@@ -5,9 +5,15 @@ import { Contract } from "../Types/Contract";
 import ContractItem from "./ContractItem";
 import '../Styles/ContractMenu.css'
 
-export default function ContractMenu()
+type ContractMenuProps = 
 {
-  const [ hasLoaded, setHasLoaded ] = useState(false);
+  contractMenuHiddenClass: "hiddenMenu" | "";
+  setIsContractMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export default function ContractMenu({contractMenuHiddenClass, setIsContractMenuOpen}: ContractMenuProps)
+{
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [contracts, setContracts] = useState<Array<Contract> | null>(null);
 
   const {agentToken} = useTokenContext();
@@ -35,21 +41,20 @@ export default function ContractMenu()
   if(!contracts)
   { 
     return (
-    <>
+    <div id="contractMenu" className={`menu ${contractMenuHiddenClass}`}>
       <h2 id="contractMenuHeader">Contracts</h2>
       <p className="emptyList">You currently have no contracts.</p>
-    </>
+    </div>
     ) 
-}
-
+  }
 
   return(
-  <>
-    
+  <div id="contractMenu" className={`menu ${contractMenuHiddenClass}`}>
+    <button id="closeContractsMenu" onClick={() => {setIsContractMenuOpen(false)}}>X</button>
     <ol id="contractsList">
       {contracts.map(contract => <ContractItem contract={contract} />)}
     </ol>
-  </>
+  </div>
     
   )
 }

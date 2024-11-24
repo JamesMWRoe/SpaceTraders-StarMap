@@ -16,9 +16,5 @@ export default function useOpenCloseMenu()
     setHiddenClass('');
   }, [isOpen]);
 
-  const returnProps = {
-    hiddenClass: hiddenClass,
-    setIsOpen: setIsOpen
-  }
-  return returnProps;
+  return [hiddenClass, setIsOpen] as const;
 }
