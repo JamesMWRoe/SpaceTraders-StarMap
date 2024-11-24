@@ -1,25 +1,38 @@
 import { GetWaypointClassOfWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
 import { useSelectedWaypointContext } from "../Context/SelectedWaypointContext";
-import useOpenCloseMenu from "../Hooks/useOpenCloseMenu";
 import { GetData } from "../Helpers/ApiRequests";
 import { Shipyard } from "../Types/Shipyard";
 import { useStarmapDataContext } from "../Context/StarMapDataContext";
 import { Market } from "../Types/Market";
 import { useTokenContext } from "../Context/TokenContext";
+import { useEffect } from "react";
 
 type WaypointContextMenuProps =
 {
+  hiddenClass: 'hiddenMenu' | '';
+  
   setShipyard: React.Dispatch<React.SetStateAction<Shipyard | null>>;
   setMarket: React.Dispatch<React.SetStateAction<Market | null>>;
+
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setShipyardIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setMarketIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function WaypointContextMenu({ setShipyard, setMarket}: WaypointContextMenuProps)
+export default function WaypointContextMenu({ hiddenClass, setShipyard, setMarket, setIsOpen, setShipyardIsOpen, setMarketIsOpen }: WaypointContextMenuProps)
 {
-  const { selectedWaypoint, setSelectedWaypoint } = useSelectedWaypointContext();
+  const { selectedWaypoint } = useSelectedWaypointContext();
   const { starmapData } = useStarmapDataContext();
   const { agentToken } = useTokenContext();
 
-  const hiddenClass = useOpenCloseMenu(selectedWaypoint);
+  useEffect(() => {
+    if(!selectedWaypoint) return;
+
+    UpdateShipyard();
+    UpdateMarket();
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWaypoint]);
 
   if (!selectedWaypoint) return <></>
 
@@ -29,7 +42,7 @@ export default function WaypointContextMenu({ setShipyard, setMarket}: WaypointC
 
     if (!isShipyard) return <></>
 
-    return <button type="submit" id="contextGotoShipyard" className="contextNavButton" onClick={UpdateShipyard} >Go to shipyard</button>
+    return <button type="submit" id="contextGotoShipyard" className="contextNavButton" onClick={() => {setShipyardIsOpen(true)}} >Go to shipyard</button>
   }
 
   const DisplayMarketplaceButton = () =>
@@ -38,7 +51,7 @@ export default function WaypointContextMenu({ setShipyard, setMarket}: WaypointC
 
     if (!isMarketplace) return <></>
 
-    return <button id="contextGoToMarketPlace" className="contextNavButton" onClick={UpdateMarket}>Go to marketplace</button>
+    return <button id="contextGoToMarketPlace" className="contextNavButton" onClick={() => {setMarketIsOpen(true)}}>Go to marketplace</button>
   }
 
   const DisplayRelatedShips = () =>
@@ -46,16 +59,11 @@ export default function WaypointContextMenu({ setShipyard, setMarket}: WaypointC
     return starmapData.shipArray.map(ship => ship.nav.waypointSymbol===selectedWaypoint.symbol?<p>{ship.registration.name}</p>:<></>);
   }
 
-  const closeContextMenu = () =>
-  {
-    setSelectedWaypoint(null);
-  }
-
   return(
     <div id="contextMenu" className={`menu ${hiddenClass}`}>
       <div className="menuHead">
         <h2 id="contextWaypointSymbol">Waypoint: {selectedWaypoint.type}-{GetWaypointClassOfWaypointSymbol(selectedWaypoint.symbol)}</h2>
-        <button id="closeContextMenu" onClick={closeContextMenu}>X</button>
+        <button id="closeContextMenu" onClick={() => setIsOpen(false)}>X</button>
       </div>
       <div id="contextWaypointShops">
         {DisplayShipyardButton()}
@@ -86,5 +94,4 @@ export default function WaypointContextMenu({ setShipyard, setMarket}: WaypointC
     setMarket(marketData);
   }
 
-  
 }

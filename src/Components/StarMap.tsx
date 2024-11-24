@@ -7,10 +7,11 @@ import useDrawStarmap from "../Hooks/useDrawStarmap"
 
 type CanvasProps = 
 {
-  starmapInfo: StarmapInfo
+  starmapInfo: StarmapInfo;
+  setContextMenuIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function Starmap({starmapInfo}: CanvasProps)
+export default function Starmap({starmapInfo, setContextMenuIsOpen}: CanvasProps)
 {
   const {setSelectedWaypoint} = useSelectedWaypointContext();
 
@@ -54,6 +55,7 @@ export default function Starmap({starmapInfo}: CanvasProps)
       {
         console.log(waypoint.associatedWaypoint);
         setSelectedWaypoint(waypoint.associatedWaypoint);
+        setContextMenuIsOpen(true);
       }
     });
   }

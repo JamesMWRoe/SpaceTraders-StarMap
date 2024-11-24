@@ -14,6 +14,6 @@ export type ShipForSale =
 {
   type: string;
   description: string;
-  purchasePrice: string;
+  purchasePrice: number;
 
 }

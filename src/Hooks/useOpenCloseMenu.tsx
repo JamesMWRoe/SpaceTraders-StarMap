@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 
-export default function useOpenCloseMenu(relatedObject: unknown)
+export default function useOpenCloseMenu()
 {
 
-  const [hiddenClass, setHiddenClass] = useState<'isHidden' | ''>('isHidden');
+  const [hiddenClass, setHiddenClass] = useState<'hiddenMenu' | ''>('hiddenMenu');
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if(!relatedObject)
+    if(!isOpen)
     {
-      setHiddenClass('isHidden');
+      setHiddenClass('hiddenMenu');
       return;
     }
 
     setHiddenClass('');
-  }, [relatedObject]);
+  }, [isOpen]);
 
-  return hiddenClass;
+  const returnProps = {
+    hiddenClass: hiddenClass,
+    setIsOpen: setIsOpen
+  }
+  return returnProps;
 }

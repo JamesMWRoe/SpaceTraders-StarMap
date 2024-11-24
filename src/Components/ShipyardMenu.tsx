@@ -1,20 +1,18 @@
 import { useStarmapDataContext } from "../Context/StarMapDataContext";
 import { GetWaypointClassOfWaypointSymbol } from "../Helpers/WaypointSymbolParsers";
-import useOpenCloseMenu from "../Hooks/useOpenCloseMenu";
 import { Shipyard } from "../Types/Shipyard";
 import ShipyardShip from "./ShipyardShip";
 
 type ShipyardMenuProps =
 {
+  hiddenClass: 'hiddenMenu' | '';
   shipyard: Shipyard | null;
-  setShipyard: React.Dispatch<React.SetStateAction<Shipyard | null>>;
+  setShipyardIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function ShipyardMenu({shipyard, setShipyard}: ShipyardMenuProps)
+export default function ShipyardMenu({ hiddenClass, shipyard, setShipyardIsOpen }: ShipyardMenuProps)
 {
   const { starmapData } = useStarmapDataContext();
-
-  const hiddenClass = useOpenCloseMenu(shipyard)
 
   if(!shipyard)
   {  return <></>  }
@@ -36,7 +34,7 @@ export default function ShipyardMenu({shipyard, setShipyard}: ShipyardMenuProps)
   )
 
   function CloseMenu()
-  {  setShipyard(null);  }
+  {  setShipyardIsOpen(false);  }
 
   function DisplayShipInfo()
   {
@@ -54,7 +52,7 @@ export default function ShipyardMenu({shipyard, setShipyard}: ShipyardMenuProps)
   {
     if(!shipyard) return;
 
-    return shipyard.ships.map(shipForSale => <ShipyardShip ship={shipForSale} />);
+    return shipyard.ships.map(shipForSale => <ShipyardShip waypointSymbol={shipyard.symbol} ship={shipForSale} />);
   }
 
   function DisplayShipTypes()
